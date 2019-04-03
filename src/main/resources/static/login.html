@@ -31,6 +31,7 @@
         <div class="login-form">
           <h3 class="login-head"><i class="fa fa-lg fa-fw fa-user"></i>登录</h3>
           <div class="form-group">
+            <p v-bind="username"></p>
             <label class="control-label">用户名</label>
             <input class="form-control" v-model="username" type="text" placeholder="请输入你的用户名" autofocus>
           </div>
@@ -84,6 +85,8 @@
                         password:this.password
                     }).then(res => {
                         if(res.data.code == 200){
+                            localStorage.setItem("token",res.data.data.token);
+                            localStorage.setItem("info",res.data.data.info);
                             window.location.href = "index.html"
                         }else{
                             alert(res.data.message)
