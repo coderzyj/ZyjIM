@@ -37,6 +37,10 @@ public class ApiResponse {
     public static ApiResponse ofFailed(Object data,String message){
         return new ApiResponse(Status.BAD_REQUEST.getCode(),message,data);
     }
+
+    public static ApiResponse ofFailed(){
+        return new ApiResponse(Status.BAD_REQUEST.getCode(),"",null);
+    }
     public static ApiResponse ofStatus(Status status){
         return new ApiResponse(status.getCode(),status.getStandardMessage(),null);
     }

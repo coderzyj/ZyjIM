@@ -9,10 +9,7 @@ import com.asher.im.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,5 +49,11 @@ public class UserController {
         map.put("token",token);
         map.put("info",JSON.toJSONString(info));
         return ApiResponse.ofSuccess(map);
+    }
+
+    @GetMapping("/getOnlineUserList")
+    @ResponseBody
+    public ApiResponse getOnlineUserList(){
+        return null;
     }
 }
