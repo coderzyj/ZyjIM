@@ -138,9 +138,10 @@
         1111
       </div>-->
       <el-card class="box-card">
-        <div v-for="o in 4" :key="o" class="text item">
+        <!--<div v-for="o in 4" :key="o" class="text item">
           {{'列表内容 ' + o }}
-        </div>
+        </div>-->
+        <div v-for="(item,index) in messageHistory" :index="index">{{item}}</div>
       </el-card>
       <el-input
               type="textarea"
@@ -167,7 +168,8 @@
             userList:[],
             currentUser:{},
             inputContent:'',
-            webSocket:null
+            webSocket:null,
+            messageHistory:[]
           },
           methods: {
               initWebSocket () {
@@ -197,6 +199,8 @@
                       });
                   }else if(message.type == 1){
                       this.userList = JSON.parse(message.message)
+                  }else if(message.type == 2){
+                      this.messageHistory.push(message.message)
                   }
 
               },
@@ -205,6 +209,7 @@
               },
               sendMessage () {
                   this.webSocketSend(this.inputContent)
+                  this.inputContent = ''
               }
           },
           mounted (){

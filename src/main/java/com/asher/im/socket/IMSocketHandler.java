@@ -1,6 +1,7 @@
 package com.asher.im.socket;
 
 import com.alibaba.fastjson.JSON;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -25,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @ServerEndpoint("/websocket/{username}")
 @Component
 @Slf4j
+@Data
 public class IMSocketHandler{
     private static CopyOnWriteArraySet<IMSocketHandler> websocketSet = new CopyOnWriteArraySet<>();
 
@@ -71,7 +74,8 @@ public class IMSocketHandler{
         userList.add(username);
         //更新在线用户列表
         log.info("用户列表 =>{}",JSON.toJSONString(userList));
-        this.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.listOnlineUser(JSON.toJSONString(userList))));
+        updateOnlineUserList();
+        //this.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.listOnlineUser(JSON.toJSONString(userList))));
         System.out.println("当前在线人数:"+websocketSet.size()+"人");
         Thread.sleep(1000);
         this.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.pushConnectSuccess(this.username+",你已连接成功")));
@@ -84,6 +88,12 @@ public class IMSocketHandler{
     public void onClose(){
         //从保存会话的set中移除
         websocketSet.remove(this);
+        for(String user : this.userList){
+            if (user.equals(this.username)){
+                this.userList.remove(user);
+            }
+        }
+        updateOnlineUserList();
         System.out.println("有一个用户断开连接，当前在线人数："+websocketSet.size()+"人");
     }
 
@@ -113,6 +123,13 @@ public class IMSocketHandler{
     }
 
     /**
+     * 更新用户列表
+     */
+    private void updateOnlineUserList(){
+        this.websocketSet.stream().forEach(item -> item.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.listOnlineUser(JSON.toJSONString(userList)))));
+    }
+
+    /**
      * 群发消息
      * @param message
      * @param username
@@ -122,7 +139,7 @@ public class IMSocketHandler{
         if (!websocketSet.isEmpty()){
             for(IMSocketHandler sh : websocketSet){
                 String date = getFormat().format(new Date());
-                sh.session.getAsyncRemote().sendText(username+":"+message);
+                sh.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.pushNormalMessage(username+":"+message)));
             }
         }
     }
