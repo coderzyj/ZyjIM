@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -63,16 +64,17 @@ public class IMSocketHandler{
      * @param session
      */
     @OnOpen
-    public void onOpen(Session session, @PathParam("username") String username){
+    public void onOpen(Session session, @PathParam("username") String username) throws InterruptedException {
         this.session = session;
         websocketSet.add(this);
         this.username = username;
         userList.add(username);
         //更新在线用户列表
-
-        this.session.getAsyncRemote().sendText(JSON.toJSONString(userList));
+        log.info("用户列表 =>{}",JSON.toJSONString(userList));
+        this.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.listOnlineUser(JSON.toJSONString(userList))));
         System.out.println("当前在线人数:"+websocketSet.size()+"人");
-        this.session.getAsyncRemote().sendText(this.username+",你已连接成功");
+        Thread.sleep(1000);
+        this.session.getAsyncRemote().sendText(JSON.toJSONString(PushMessage.pushConnectSuccess(this.username+",你已连接成功")));
     }
 
     /**

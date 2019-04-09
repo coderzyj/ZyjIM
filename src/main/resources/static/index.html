@@ -23,7 +23,12 @@
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://cdn.bootcss.com/vue/2.4.2/vue.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 引入elementui-->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <!-- Essential javascripts for application to work-->
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="js/jquery-3.2.1.min.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
@@ -32,6 +37,7 @@
     <script src="js/plugins/pace.min.js"></script>
     <!-- Page specific javascripts-->
     <script type="text/javascript" src="js/plugins/chart.js"></script>
+
   </head>
   <body class="app sidebar-mini rtl">
     <!-- Navbar-->
@@ -106,11 +112,11 @@
       </div>
       <ul class="app-menu">
         <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-laptop"></i><span class="app-menu__label">在线用户</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-          <ul class="treeview-menu">
-            <li><a class="treeview-item" href="bootstrap-components.html"><i class="icon fa fa-circle-o"></i> Bootstrap Elements</a></li>
-            <li><a class="treeview-item" href="https://fontawesome.com/v4.7.0/icons/" target="_blank" rel="noopener"><i class="icon fa fa-circle-o"></i> Font Icons</a></li>
+          <ul class="treeview-menu" >
+            <li v-for="(item,index) in userList" :index="index"><a class="treeview-item" href="bootstrap-components.html"><i class="icon fa fa-circle-o"></i> {{item}}</a></li>
+            <!--<li><a class="treeview-item" href="https://fontawesome.com/v4.7.0/icons/" target="_blank" rel="noopener"><i class="icon fa fa-circle-o"></i> Font Icons</a></li>
             <li><a class="treeview-item" href="ui-cards.html"><i class="icon fa fa-circle-o"></i> Cards</a></li>
-            <li><a class="treeview-item" href="widgets.html"><i class="icon fa fa-circle-o"></i> Widgets</a></li>
+            <li><a class="treeview-item" href="widgets.html"><i class="icon fa fa-circle-o"></i> Widgets</a></li>-->
           </ul>
         </li>
        <!-- <li><a class="app-menu__item" href="charts.html"><i class="app-menu__icon fa fa-pie-chart"></i><span class="app-menu__label">Charts</span></a></li>-->
@@ -118,7 +124,7 @@
       </ul>
     </aside>
     <main class="app-content">
-      <div class="app-title">
+      <!--<div class="app-title">
         <div>
           <h1><i class="fa fa-dashboard"></i> Dashboard</h1>
           <p>A free and open source Bootstrap 4 admin template</p>
@@ -127,8 +133,30 @@
           <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
           <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
         </ul>
-      </div>
-
+      </div>-->
+      <!--<div style="padding:inherit;border-radius:10px;border: 1px solid grey;margin:0 auto 20%;background-color: white;min-height: 600px">
+        1111
+      </div>-->
+      <el-card class="box-card">
+        <div v-for="o in 4" :key="o" class="text item">
+          {{'列表内容 ' + o }}
+        </div>
+      </el-card>
+      <el-input
+              type="textarea"
+              style="margin-top: 30px"
+              :autosize="{ minRows: 4, maxRows: 5}"
+              placeholder="请输入内容"
+              v-model="inputContent">
+      </el-input>
+      <el-row>
+        <el-col :span="4"><div class="grid-content bg-purple"></div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-light"></div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple"></div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-light"></div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple"></div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-light"><el-button style="float: right"type="primary" @click="sendMessage">发送</el-button></div></el-col>
+      </el-row>
     </main>
     </div>
 
@@ -137,64 +165,59 @@
           el:'#app',
           data:{
             userList:[],
-            currentUser:{}
+            currentUser:{},
+            inputContent:'',
+            webSocket:null
           },
           methods: {
+              initWebSocket () {
+                  const wsUrl = `ws://localhost:8080/websocket/`+this.currentUser.username
+                  this.webSocket = new WebSocket(wsUrl)
+                  this.webSocket.onclose = this.closeWebSocket
+                  this.webSocket.onopen = this.webSocketOpen
+                  this.webSocket.onmessage = this.webSocketOnMessage
+                  this.webSocket.onerror = this.webSocketError
+              },
+              webSocketOpen () {
+                  console.log("websocket连接成功！！")
+              },
+              webSocketError () {
+                  console.log("websocket连接失败！！")
+              },
+              webSocketSend (content) {
+                  this.webSocket.send(content);
+              },
+              webSocketOnMessage (data) {
+                  console.log("接收到的信息"+data.data);
+                  let message = JSON.parse(data.data);
+                  if(message.type == 0){
+                      this.$message({
+                          message: message.message,
+                          type: 'success'
+                      });
+                  }else if(message.type == 1){
+                      this.userList = JSON.parse(message.message)
+                  }
 
+              },
+              closeWebSocket (e) { //关闭
+                  console.log('断开连接', e)
+              },
+              sendMessage () {
+                  this.webSocketSend(this.inputContent)
+              }
           },
           mounted (){
             console.log(localStorage.getItem("info"))
             this.currentUser = JSON.parse(localStorage.getItem("info"))
+            this.initWebSocket()
+          },
+          destroyed (){
+              this.closeWebSocket()
           }
       })
     </script>
-    <script type="text/javascript">
-      var data = {
-      	labels: ["January", "February", "March", "April", "May"],
-      	datasets: [
-      		{
-      			label: "My First dataset",
-      			fillColor: "rgba(220,220,220,0.2)",
-      			strokeColor: "rgba(220,220,220,1)",
-      			pointColor: "rgba(220,220,220,1)",
-      			pointStrokeColor: "#fff",
-      			pointHighlightFill: "#fff",
-      			pointHighlightStroke: "rgba(220,220,220,1)",
-      			data: [65, 59, 80, 81, 56]
-      		},
-      		{
-      			label: "My Second dataset",
-      			fillColor: "rgba(151,187,205,0.2)",
-      			strokeColor: "rgba(151,187,205,1)",
-      			pointColor: "rgba(151,187,205,1)",
-      			pointStrokeColor: "#fff",
-      			pointHighlightFill: "#fff",
-      			pointHighlightStroke: "rgba(151,187,205,1)",
-      			data: [28, 48, 40, 19, 86]
-      		}
-      	]
-      };
-      var pdata = [
-      	{
-      		value: 300,
-      		color: "#46BFBD",
-      		highlight: "#5AD3D1",
-      		label: "Complete"
-      	},
-      	{
-      		value: 50,
-      		color:"#F7464A",
-      		highlight: "#FF5A5E",
-      		label: "In-Progress"
-      	}
-      ]
-      
-      /*var ctxl = $("#lineChartDemo").get(0).getContext("2d");
-      var lineChart = new Chart(ctxl).Line(data);
-      
-      var ctxp = $("#pieChartDemo").get(0).getContext("2d");
-      var pieChart = new Chart(ctxp).Pie(pdata);*/
-    </script>
+
     <script src="js/main.js"></script>
     <!-- Google analytics script-->
     <script type="text/javascript">
@@ -207,5 +230,26 @@
       	ga('send', 'pageview');
       }
     </script>
+  <style>
+    .el-card__body {
+      min-height: 600px;
+
+    }
+    .el-row {
+      margin-bottom: 20px;
+    &:last-child {
+       margin-bottom: 0;
+     }
+    }
+    .grid-content {
+      padding-top: 10px;
+      border-radius: 4px;
+      min-height: 36px;
+    }
+    .row-bg {
+      padding: 10px 0;
+      background-color: #f9fafc;
+    }
+  </style>
   </body>
 </html>
